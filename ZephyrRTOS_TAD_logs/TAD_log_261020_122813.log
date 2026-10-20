@@ -1,0 +1,11 @@
+"Task Aware Debugger for GDB" version 25.6.0 (202506250844)
+Copyright 2016-2025 NXP
+==================================
+12:28:02.689 INFO: [ZephyrRTOS] .config file could not be read [C:\PROJECTS\SEM\GPIO_DMA\Signal_DMA\Debug\.config (El sistema no puede encontrar el archivo especificado)]
+12:28:02.689 INFO: [TadModel] DSF session ID 25 has started.
+12:28:06.173 INFO: [TadState] TAD state changed: DEBUG_STARTED -> DEBUG_INIT_0 (SUSPENDED, USER_REQUEST)
+12:28:06.900 INFO: [TadState] TAD state changed: DEBUG_INIT_0 -> DEBUG_INIT_1 (RESUMED, USER_REQUEST)
+12:28:06.916 INFO: [TadState] TAD state changed: DEBUG_INIT_1 -> DEBUG_SUSPENDED (SUSPENDED, BREAKPOINT)
+12:28:09.995 INFO: [TadState] TAD state changed: DEBUG_SUSPENDED -> DEBUG_RESUMED (RESUMED, USER_REQUEST)
+12:28:12.688 INFO: [TadState] TAD state changed: DEBUG_RESUMED -> READY (SUSPENDED, SIGNAL)
+12:28:13.687 INFO: [TadModel] DSF session ID 25 has ended.

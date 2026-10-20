@@ -1,0 +1,87 @@
+
+
+#include "GPIO.h"
+#include "fsl_gpio.h"
+#include "fsl_edma.h"
+
+#define DMA_BASEADDR DMA0
+#define DMA_CHANNEL   0U
+#define BUFFER_LENGTH 4U
+#define WORD_SIZE 4U
+
+AT_NONCACHEABLE_SECTION_INIT(uint32_t src_addr[BUFFER_LENGTH])  = {0x01, 0x02, 0x03, 0x04};
+AT_NONCACHEABLE_SECTION_INIT(uint32_t dest_addr[BUFFER_LENGTH]) = {0x00, 0x00, 0x00, 0x00};
+
+
+void DMA_Callback(edma_handle_t *handle, void *userData, bool transferDone, uint32_t tcds)
+{
+    if (transferDone)
+    {
+
+
+    }
+}
+
+
+int main(void) {
+
+	edma_config_t cfg;
+	edma_handle_t g_DMA_Handle;
+
+	edma_transfer_config_t transferConfig;
+
+
+    CLOCK_EnableClock(kCLOCK_Gpio0);
+
+    GPIO_config();
+    GPIO_SetPinInterruptConfig(GPIO0, 6U, kGPIO_DMAFallingEdge);
+
+	  EDMA_GetDefaultConfig(&cfg);
+	  EDMA_Init(DMA_BASEADDR, &cfg);
+
+	  EDMA_CreateHandle(&g_DMA_Handle, DMA_BASEADDR, DMA_CHANNEL);
+	  EDMA_SetCallback(&g_DMA_Handle, DMA_Callback, NULL);
+
+	  EDMA_SetChannelMux(DMA_BASEADDR, DMA_CHANNEL, kDma0RequestMuxGpio0PinEventRequest0);
+
+
+
+
+
+	 EDMA_ResetChannel(DMA_BASEADDR, DMA_CHANNEL);
+
+	  memset(&transferConfig, 0, sizeof(transferConfig));
+
+	  transferConfig.srcAddr              = (uint32_t)src_addr;
+	  transferConfig.destAddr             = (uint32_t)dest_addr;
+	  transferConfig.srcTransferSize      = kEDMA_TransferSize4Bytes;
+	  transferConfig.destTransferSize     = kEDMA_TransferSize4Bytes;
+	  transferConfig.srcOffset            = WORD_SIZE;
+	  transferConfig.destOffset           = WORD_SIZE;
+	  transferConfig.minorLoopBytes       = WORD_SIZE;
+	  transferConfig.majorLoopCounts      = WORD_SIZE*BUFFER_LENGTH;// number of minor loop in a mejor
+	  transferConfig.srcAddrModulo        = kEDMA_ModuloDisable;
+	  transferConfig.srcMajorLoopOffset   = -WORD_SIZE*BUFFER_LENGTH;
+	  transferConfig.dstAddrModulo        = kEDMA_ModuloDisable;
+	  transferConfig.dstMajorLoopOffset   = -WORD_SIZE*BUFFER_LENGTH;
+	  transferConfig.enabledInterruptMask = 0; // kEDMA_MajorInterruptEnable;
+
+	  EDMA_SubmitTransfer(&g_DMA_Handle, &transferConfig);
+
+
+#if defined(DMA_CSR_DREQ_MASK)
+	  EDMA_TCD_CSR(EDMA_TCD_BASE(DMA_BASEADDR, DMA_CHANNEL),
+				   EDMA_TCD_TYPE(DMA_BASEADDR)) &=
+		  (uint16_t)~DMA_CSR_DREQ_MASK;
+ #else
+	  /* Fallback directo (si tu SDK no expone la macro anterior) */
+	  DMA0->CH[DMA_WAVE_CHANNEL].TCD_CSR &= ~(1U << 3); /* bit DREQ = 0 */
+ #endif
+
+	  EDMA_StartTransfer(&g_DMA_Handle);
+
+    while(1) {
+
+    }
+    return 0 ;
+}

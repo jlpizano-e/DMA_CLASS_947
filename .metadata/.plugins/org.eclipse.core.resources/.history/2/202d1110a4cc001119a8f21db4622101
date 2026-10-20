@@ -1,0 +1,68 @@
+
+#include "GPIO.h"
+
+
+#include "fsl_edma.h"
+
+#define DMA_BASEADDR DMA0
+#define DMA_CHANNEL   0U
+#define BUFFER_LENGTH 4U
+#define WORD_SIZE 4U
+
+AT_NONCACHEABLE_SECTION_INIT(uint32_t src_addr[BUFFER_LENGTH])  = {0x01, 0x02, 0x03, 0x04};
+AT_NONCACHEABLE_SECTION_INIT(uint32_t dest_addr[BUFFER_LENGTH]) = {0x00, 0x00, 0x00, 0x00};
+
+
+int main(void) {
+
+	edma_config_t cfg;
+	edma_handle_t g_DMA_Handle;
+
+	edma_transfer_config_t transferConfig;
+
+
+    CLOCK_EnableClock(kCLOCK_Gpio0);
+
+    GPIO_config();
+    GPIO_SetPinInterruptConfig(GPIO0, 6U, kGPIO_DMAFallingEdge);
+
+	  EDMA_GetDefaultConfig(&cfg);
+	  EDMA_Init(DMA_BASEADDR, &cfg);
+
+	  EDMA_CreateHandle(&g_DMA_Handle, DMA_BASEADDR, DMA_CHANNEL);
+	  //EDMA_SetCallback(&g_DMA_Handle, DMA_Callback, NULL);
+	  EDMA_SetCallback(&g_DMA_Handle, NULL, NULL);
+
+	//  EDMA_SetChannelMux(DMA_WAVE_BASE, DMA_WAVE_CHANNEL, kDma0RequestMuxGpio0PinEventRequest0);
+	  EDMA_SetChannelMux(DMA_BASEADDR, DMA_CHANNEL, kDma1RequestMuxCtimer4M0);
+
+
+
+
+	 EDMA_ResetChannel(DMA_BASEADDR, DMA_CHANNEL);
+
+	  memset(&transferConfig, 0, sizeof(transferConfig));
+
+	  transferConfig.srcAddr              = (uint32_t)src_addr;
+	  transferConfig.destAddr             = (uint32_t)dest_addr;
+	  transferConfig.srcTransferSize      = kEDMA_TransferSize2Bytes;
+	  transferConfig.destTransferSize     = kEDMA_TransferSize2Bytes;
+	  transferConfig.srcOffset            = 2;
+	  transferConfig.destOffset           = 0;
+	  transferConfig.minorLoopBytes       = 2;
+	  transferConfig.majorLoopCounts      = 200;// number of minor loop in a mejor
+	  transferConfig.srcAddrModulo        = kEDMA_ModuloDisable;
+	  transferConfig.srcMajorLoopOffset   = -(2*200);
+	  transferConfig.dstAddrModulo        = kEDMA_ModuloDisable;
+	  transferConfig.dstMajorLoopOffset   = 0;
+	  transferConfig.enabledInterruptMask = 0; // kEDMA_MajorInterruptEnable;
+
+	  EDMA_SubmitTransfer(&g_DMA_Handle, &transferConfig);
+
+	  EDMA_StartTransfer(&g_DMA_Handle);
+
+    while(1) {
+
+    }
+    return 0 ;
+}

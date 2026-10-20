@@ -1,0 +1,7 @@
+C:\PROJECTS\SEM\GPIO_DMA\GPIO_DMA\drivers/fsl_clock.h:1496:20:CLOCK_EnableClock	24	static
+C:\PROJECTS\SEM\GPIO_DMA\GPIO_DMA\drivers/fsl_gpio.h:487:20:GPIO_SetPinInterruptConfig	24	static
+C:\PROJECTS\SEM\GPIO_DMA\GPIO_DMA\drivers/fsl_port.h:360:20:PORT_SetPinConfig	32	static
+../source/GPIO.c:22:6:GPIO_callback_init	16	static
+../source/GPIO.c:46:6:GPIO_clear_irq_status	16	static
+../source/GPIO.c:58:9:GPIO_get_irq_status	24	static
+../source/GPIO.c:74:6:GPIO_config	24	static

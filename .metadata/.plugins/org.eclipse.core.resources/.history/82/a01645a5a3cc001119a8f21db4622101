@@ -1,0 +1,150 @@
+/*
+ * GPIO.c
+ *
+ *  Created on: 17 jun. 2026
+ *      Author: luispizano
+ */
+
+
+#include "GPIO.h"
+#include "fsl_gpio.h"
+#include "fsl_port.h"
+#include "frdm_hardware.h"
+#include "MCXN947_cm33_core0_COMMON.h"
+
+
+static void (*gpio_0_callback)(void) = 0;
+static void (*gpio_1_callback)(void) = 0;
+
+volatile static gpio_interrupt_flags_t g_intr_status_flag = {0};
+
+
+void GPIO_callback_init(gpio_name_t gpio_name, void (*handler)(void))
+{
+	if(GPIO_0 == gpio_name)
+	{
+		gpio_0_callback = handler;
+	}
+	if(GPIO_1 == gpio_name )
+	{
+		gpio_1_callback = handler;
+	}
+}
+/*
+void GPIO00_IRQHandler (void)
+{
+	if(gpio_0_callback)
+	{
+		gpio_0_callback();
+	}
+	GPIO_GpioClearInterruptFlags(GPIO0, GPIO_ALL_BITS);
+
+}
+*/
+
+
+void GPIO_clear_irq_status(gpio_name_t gpio)
+{
+	if(GPIO_0 == gpio)
+	{
+		g_intr_status_flag.flag_gpio_0 = FALSE;
+	}
+	if(GPIO_1 == gpio)
+	{
+		g_intr_status_flag.flag_gpio_1 = FALSE;
+	}
+}
+
+uint8_t GPIO_get_irq_status(gpio_name_t gpio)
+{
+	uint8_t status = 0;
+
+	if(GPIO_0 == gpio)
+	{
+		status = g_intr_status_flag.flag_gpio_0;
+	}
+	if(GPIO_1 == gpio)
+	{
+		status = g_intr_status_flag.flag_gpio_1;
+	}
+
+	return(status);
+}
+
+void GPIO_config(void)
+{
+	/* Define the init structure for the output LED pin*/
+		gpio_pin_config_t led_config = {
+			kGPIO_DigitalOutput,
+			1,
+		};
+
+		gpio_pin_config_t sw_config = {
+			kGPIO_DigitalInput,
+			0,
+		};
+
+		/* Enables the clock for PORT0 controller: Enables clock */
+		CLOCK_EnableClock(kCLOCK_Port0);
+		/* Enables the clock for PORT1: Enables clock */
+		CLOCK_EnableClock(kCLOCK_Port1);
+
+		  const port_pin_config_t output_config = {/* Internal pull-up/down resistor is disabled */
+			                                                      kPORT_PullDisable,
+			                                                      /* Low internal pull resistor value is selected. */
+			                                                      kPORT_LowPullResistor,
+			                                                      /* Fast slew rate is configured */
+			                                                      kPORT_FastSlewRate,
+			                                                      /* Passive input filter is disabled */
+			                                                      kPORT_PassiveFilterDisable,
+			                                                      /* Open drain output is disabled */
+			                                                      kPORT_OpenDrainDisable,
+			                                                      /* Low drive strength is configured */
+			                                                      kPORT_LowDriveStrength,
+			                                                      /* Pin is configured as PIO0_10 */
+			                                                      kPORT_MuxAlt0,
+			                                                      /* Digital input enabled */
+			                                                      kPORT_InputBufferEnable,
+			                                                      /* Digital input is not inverted */
+			                                                      kPORT_InputNormal,
+			                                                      /* Pin Control Register fields [15:0] are not locked */
+			                                                      kPORT_UnlockRegister};
+		/* PORT0_10 (pin B12) is configured as PIO0_10 */
+		PORT_SetPinConfig(PORT_RED_LED, RED_LED, &output_config);
+		PORT_SetPinConfig(PORT_GREEN_LED, GREEN_LED, &output_config);
+		PORT_SetPinConfig(PORT_BLUE_LED, BLUE_LED, &output_config);
+
+		const port_pin_config_t input_config = {/* Internal pull-up/down resistor is disabled */
+															  kPORT_PullDisable,
+															  /* Low internal pull resistor value is selected. */
+															  kPORT_LowPullResistor,
+															  /* Fast slew rate is configured */
+															  kPORT_FastSlewRate,
+															  /* Passive input filter is disabled */
+															  kPORT_PassiveFilterEnable,
+															  /* Open drain output is disabled */
+															  kPORT_OpenDrainDisable,
+															  /* Low drive strength is configured */
+															  kPORT_LowDriveStrength,
+															  /* Pin is configured as PIO0_10 */
+															  kPORT_MuxAlt0,
+															  /* Digital input enabled */
+															  kPORT_InputBufferEnable,
+															  /* Digital input is not inverted */
+															  kPORT_InputNormal,
+															  /* Pin Control Register fields [15:0] are not locked */
+															  kPORT_UnlockRegister};
+			PORT_SetPinConfig(PORT_SW2, SW2, &input_config);
+			PORT_SetPinConfig(PORT_SW3, SW3, &input_config);
+
+
+			GPIO_PinInit(GPIO_RED_LED, RED_LED, &led_config);
+			GPIO_PinInit(GPIO_GREEN_LED, GREEN_LED, &led_config);
+			GPIO_PinInit(GPIO_BLUE_LED, BLUE_LED, &led_config);
+/*
+			GPIO_PinInit(GPIO_SW2, SW2, &sw_config);*/
+			GPIO_PinInit(GPIO_SW3, SW3, &sw_config);
+
+			GPIO_SetPinInterruptConfig(GPIO_SW2, SW2, kGPIO_InterruptFallingEdge);
+
+}
